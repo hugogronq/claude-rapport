@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verktygsanalys</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fraunces:ital,wght@0,300;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Tokens ───────────────────────────────────────── */
+    :root {
+      --bg:      #080810;
+      --surface: #10101e;
+      --card:    #14142a;
+      --border:  #1e1e38;
+      --accent:  #00d4aa;
+      --orange:  #ff6b35;
+      --purple:  #a78bfa;
+      --text:    #dcdcf0;
+      --muted:   #5a5a7a;
+      --heading: #f0f0ff;
+      --mono:    'JetBrains Mono', monospace;
+      --sans:    'Syne', sans-serif;
+      --serif:   'Fraunces', serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    
+            /* ─── Egna ändringar ─────────────────────── detta är tillagt för navigation mellan olika ai genererade sidor.*/
+    .delsida {
+      color: black;
+      background-color: white;
+      margin: 50px;
+      padding-top: 50px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+    /* ── Nav ─────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 4rem;
+      background: rgba(8,8,16,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--orange); }
+    .nav-date {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* Progress bar */
+    #progress-bar {
+      position: fixed; top: 0; left: 0; z-index: 200;
+      height: 2px; background: var(--accent);
+      width: 0; transition: width 0.1s linear;
+    }
+
+    /* ── Hero ────────────────────────────────────────── */
+    .hero {
+      padding: 10rem 4rem 6rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -20%; right: -10%;
+      width: 50vw; height: 50vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,212,170,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: 1px solid rgba(0,212,170,0.3);
+      padding: 0.3rem 0.8rem;
+      border-radius: 2px;
+      margin-bottom: 1.8rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: clamp(3rem, 5vw, 5rem);
+      line-height: 1.08;
+      color: var(--heading);
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero-sub {
+      margin-top: 1.2rem;
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 44ch;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .divider {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      margin: 2rem 0;
+      animation: fadeUp 0.5s 0.15s ease both;
+    }
+
+    /* ── Cards grid ──────────────────────────────────── */
+    .cards-section {
+      padding: 2rem 4rem 6rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    /* ── Card ────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.2rem 2.2rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(24px);
+      animation: fadeUp 0.6s ease forwards;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+
+    .card:hover {
+      border-color: rgba(0,212,170,0.35);
+      transform: translateY(-3px);
+    }
+
+    /* Top accent line per card */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), var(--purple)); }
+    .card:nth-child(2)::before { background: linear-gradient(90deg, var(--purple), var(--accent)); }
+    .card:nth-child(3)::before { background: linear-gradient(90deg, var(--orange), var(--accent)); }
+    .card:nth-child(4)::before { background: linear-gradient(90deg, var(--accent), var(--orange)); }
+
+    /* Card number label */
+    .card-num {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    /* Card title */
+    .card-title {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: 1.6rem;
+      color: var(--heading);
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+    .card-title em { font-style: italic; color: var(--accent); }
+
+    /* Divider under title */
+    .card-rule {
+      width: 36px; height: 1px;
+      background: var(--accent);
+      margin: 1rem 0 1.4rem;
+      opacity: 0.6;
+    }
+
+    /* ─────────────────────────────────────────────────
+       TEXT CONTENT AREA
+       ─────────────────────────────────────────────────
+       Look for the clearly marked comment blocks below
+       inside each .card div. Replace the placeholder
+       text inside the <p> tags with your own content.
+       Add more <p> tags if you need more paragraphs.
+       ───────────────────────────────────────────────── */
+    .card-body {
+      font-family: var(--sans);
+      font-size: 0.92rem;
+      line-height: 1.8;
+      color: var(--text);
+    }
+    .card-body p + p { margin-top: 0.9rem; }
+
+    /* ── Footer ──────────────────────────────────────── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 4rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-brand { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+    .footer-brand span { color: var(--accent); }
+    .footer-note { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+
+    /* ── Animations ──────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 860px) {
+      nav { padding: 1rem 1.5rem; }
+      .hero { padding: 8rem 1.5rem 4rem; }
+      .cards-section { grid-template-columns: 1fr; padding: 1.5rem 1.5rem 4rem; }
+      footer { padding: 2rem 1.5rem; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div class="delsida"><h5>här är de olika delsidorna <a href="index.html" target="_blank">Sida 1</a> <a href="sida2.html" target="_blank">Sida 2</a> <a href="sida3.html" target="_blank">Sida 3</a></h5></div>
+<!-- ── Nav ───────────────────────────────────────────── -->
+<nav>
+  <a href="#" class="nav-logo">Verktygs<span>//</span>Analys</a>
+  <span class="nav-date" id="nav-date"></span>
+</nav>
+
+<!-- ── Hero ──────────────────────────────────────────── -->
+<section class="hero">
+  <span class="hero-eyebrow">// Strukturerad Genomgång</span>
+  <h1>Verktygets<br><em>Analys</em></h1>
+  <div class="divider"></div>
+  <p class="hero-sub">En samlad rapport i fyra delar — från beskrivning till slutsats.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     4-KORTS GRID
+     ══════════════════════════════════════════════════════ -->
+<div class="cards-section">
+
+  <!-- ╔══════════════════════════════════════════════════
+       ║  KORT 1 — Verktyget
+       ╚══════════════════════════════════════════════════ -->
+  <div class="card">
+    <span class="card-num">// 01</span>
+    <h2 class="card-title">Verk<em>tyget</em></h2>
+    <div class="card-rule"></div>
+
+    <!-- ✏ SKRIV DIN TEXT HÄR ─────────────────────────────
+         Ersätt texten nedan med ditt eget innehåll.
+         Lägg till fler <p>-taggar om du behöver mer text.
+    ────────────────────────────────────────────────────── -->
+    <div class="card-body">
+      <p>Verktyget heter <a href="https://claude.ai/" target="_blank">Claude</a> och är skapat av företaget Anthropic. Botten skapades 2023 och har sedan dess använts mycket för kodning och filtolkning. </p>
+    </div>
+    <!-- ✏ SLUT PÅ DIN TEXT ─────────────────────────────── -->
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════
+       ║  KORT 2 — Allmän beskrivning
+       ╚══════════════════════════════════════════════════ -->
+  <div class="card">
+    <span class="card-num">// 02</span>
+    <h2 class="card-title">Allmän <em>beskrivning</em></h2>
+    <div class="card-rule"></div>
+
+    <!-- ✏ SKRIV DIN TEXT HÄR ─────────────────────────────
+         Ersätt texten nedan med ditt eget innehåll.
+         Lägg till fler <p>-taggar om du behöver mer text.
+    ────────────────────────────────────────────────────── -->
+    <div class="card-body">
+      <p>Claude är en LLM ai där användaren kan chatta med botten och få svar. Verktyget används huvudsakligen för dess kodning och dokumentanalyseringar och som många andra chatbottar kan man komma åt den genom en webbläsare eller mobilapp. Man behöver ett konto för att använda verktyget.</p>
+    </div>
+    <!-- ✏ SLUT PÅ DIN TEXT ─────────────────────────────── -->
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════
+       ║  KORT 3 — Användning av verktyget
+       ╚══════════════════════════════════════════════════ -->
+  <div class="card">
+    <span class="card-num">// 03</span>
+    <h2 class="card-title">Användning av <em>verktyget</em></h2>
+    <div class="card-rule"></div>
+
+    <!-- ✏ SKRIV DIN TEXT HÄR ─────────────────────────────
+         Ersätt texten nedan med ditt eget innehåll.
+         Lägg till fler <p>-taggar om du behöver mer text.
+    ────────────────────────────────────────────────────── -->
+    <div class="card-body">
+      <p>Claude används huvudsakligen för att tolka, skapa och troubleshoota kod. Alla delsidor och koden i sida2 är skapat av Claude. Claude genererar kod väl, men den kan också användas för att analysera andra filer, eller endast som en vanlig chattbot.</p>
+    </div>
+    <!-- ✏ SLUT PÅ DIN TEXT ─────────────────────────────── -->
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════
+       ║  KORT 4 — Slutlig analys
+       ╚══════════════════════════════════════════════════ -->
+  <div class="card">
+    <span class="card-num">// 04</span>
+    <h2 class="card-title">Slutlig <em>analys</em></h2>
+    <div class="card-rule"></div>
+
+    <!-- ✏ SKRIV DIN TEXT HÄR ─────────────────────────────
+         Ersätt texten nedan med ditt eget innehåll.
+         Lägg till fler <p>-taggar om du behöver mer text.
+    ────────────────────────────────────────────────────── -->
+    <div class="card-body">
+      <p>Claude är ett verktyg skapat med fokus på att ge en större sammanhangsuppfattning och den kan enkelt komma ihåg vad den gjort under hela chattens gång. Botten är bra för att analysera filer och skapa kod och det den gör är snyggt utfört. Detta projektet är skapat av Hugo, med hjälp av Claude AI.</p>
+    </div>
+    <!-- ✏ SLUT PÅ DIN TEXT ─────────────────────────────── -->
+  </div>
+
+</div>
+<!-- ══════════════════════════════════════════════════════
+     SLUT PÅ 4-KORTS GRID
+     ══════════════════════════════════════════════════════ -->
+
+<!-- ── Footer ─────────────────────────────────────────── -->
+<footer>
+  <div class="footer-brand">Verktygs<span>//</span>Analys</div>
+  <div class="footer-note">Strukturerad rapport · Skapad av Claude</div>
+</footer>
+
+<script>
+  // Scroll progress bar
+  window.addEventListener('scroll', () => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    document.getElementById('progress-bar').style.width =
+      (total > 0 ? (window.scrollY / total) * 100 : 0) + '%';
+  });
+
+  // Live date in nav
+  const d = new Date();
+  document.getElementById('nav-date').textContent =
+    d.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
+</script>
+
+</body>
+</html>
